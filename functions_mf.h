@@ -261,8 +261,10 @@ void TMDB::l1_trigger_loop( bool ignoreAside )
     Int_t ssc     = (roi+4)/8;
     Int_t sector  = (trig_L1_mu_sectorAddress->at(nloop)>>1) & (0x3F);
     Int_t vetoed  = trig_L1_mu_vetoed->at(nloop);
-    bool isAside  = (eta>0.0) ? true: false;
+    bool isAside  = (trig_L1_mu_hemisphere->at(nloop)==1) ? true: false;
+    // bool isAside  = (eta>0.0) ? true: false;
     bool isEndcap = (trig_L1_mu_source->at(nloop)==1) ? true: false;
+    bool isBarrel = (trig_L1_mu_source->at(nloop)==0) ? true: false;
     Int_t tile_module = tilemodule_to_check(sector);
     // if(!(isEndcap && pt_thr >= 5 && ssc < 6)) { continue; }
     // if( fabs(eta) < 1.0 || 1.3 < fabs(eta) )  { continue; }
@@ -271,28 +273,40 @@ void TMDB::l1_trigger_loop( bool ignoreAside )
 
     // Filling L1 histograms
     th1_l1muon->Fill(eta);
-    // pt_thr: 5 = L1MU15, 6 = L1MU20
-    if (pt_thr >= 5) {th1_l1muon_eta->Fill(eta); th1_l1muon_phi->Fill(phi);}
-    if (pt_thr == 5) {th1_l1muon_15_eta->Fill(eta);th1_l1muon_15_phi->Fill(phi);}
-    if (pt_thr == 6) {th1_l1muon_20_eta->Fill(eta);th1_l1muon_20_phi->Fill(phi);}
+    // pt_thr: 5 = L1MU15-L1MU20, >=5 = L1MU15, 6 = L1MU20
+    // For L1MU15-L1MU20
+    if (pt_thr == 5) {th1_l1muon_eta->Fill(eta); th1_l1muon_phi->Fill(phi);}
+    // For L1MU15
+    if (pt_thr >= 5) {
+      th1_l1muon_15_eta->Fill(eta);
+      th1_l1muon_15_phi[0]->Fill(phi);
+      if(isAside){  th1_l1muon_15_phi[1]->Fill(phi);}
+      else{         th1_l1muon_15_phi[2]->Fill(phi);}
+    }
+    // For L1MU20
+    if (pt_thr == 6) {
+      th1_l1muon_20_eta->Fill(eta);
+      th1_l1muon_20_phi[0]->Fill(phi);
+      if(isAside){  th1_l1muon_20_phi[1]->Fill(phi);}
+      else{         th1_l1muon_20_phi[2]->Fill(phi);}
+    }
 
     // offline muon associated
-    // for(Int_t muon=0; muon<mu_n; muon++) {
-    //   Float_t muon_eta = mu_eta->at(muon);
-    //   Float_t muon_phi = mu_phi->at(muon);
-    //   Float_t muon_pt  = mu_pt->at(muon);
-    //   Float_t dR = calc_dR(eta-muon_eta , phi-muon_phi);
-    //   bool isCombined = (mu_muonType->at(muon)==0)? true: false;
-    //   bool isCaloTag = (mu_muonType->at(muon)==3)? true: false;
-    //   //Int_t quality	  = mu_quality->at(muon);
-    //   // if(dR> 0.1)       {continue;} // dR cut
-    //   if(muon_pt<15000) {continue;} // pt cut
-    //   // if(isCaloTag)     {cout << "CaloTagged -> phi: " << muon_phi << " eta: " << muon_eta << endl;}
-    //   if(!isCombined)   {continue;} // combined muon
-    //   // if(!isCaloTag)   {continue;} // colorimeter tagged  muon
-    //
-    //   // th1_offline->Fill(muon_eta);
-    // } // end of muon loop
+    for(Int_t muon=0; muon<mu_n; muon++) {
+      Float_t muon_eta = mu_eta->at(muon);
+      Float_t muon_phi = mu_phi->at(muon);
+      Float_t muon_pt  = mu_pt->at(muon);
+      // bool isCombined = (mu_muonType->at(muon)==0)? true: false;
+      Int_t quality	  = mu_quality->at(muon);
+
+      Float_t dR = calc_dR(eta-muon_eta , phi-muon_phi);
+
+      // true positive: it has an offline muon associated
+      if(dR < 0.1){
+
+      } // end of true positive
+
+    } // end of muon loop
 
     // if( fabs(eta) < 1.0 || 1.3 < fabs(eta) )  { continue; } // eta restriction for TMDB
     // // Get data from TMDB
@@ -354,13 +368,41 @@ void TMDB::print_root(string fout)
   for (Int_t i=0; i<12; i++){ th1_hlt_pt_fp[i]->Write();}
   for (Int_t i=0; i<12; i++){ th1_hlt_pt_fn[i]->Write();}
 
+  // Writing  L1 histograms
   th1_l1muon->Write();
   th1_l1muon_eta->Write();
   th1_l1muon_phi->Write();
   th1_l1muon_15_eta->Write();
-  th1_l1muon_15_phi->Write();
+  for (Int_t i=0; i<4; i++){  th1_l1muon_15_eta_vp[i]->Write();}
+  for (Int_t i=0; i<4; i++){  th1_l1muon_15_eta_vn[i]->Write();}
+  for (Int_t i=0; i<4; i++){  th1_l1muon_15_eta_fp[i]->Write();}
+  for (Int_t i=0; i<4; i++){  th1_l1muon_15_eta_fn[i]->Write();}
+  for (Int_t i=0; i<3; i++){  th1_l1muon_15_phi[i]->Write();}
+  for (Int_t i=0; i<9; i++){  th1_l1muon_15_phi_vp[i]->Write();}
+  for (Int_t i=0; i<9; i++){  th1_l1muon_15_phi_vn[i]->Write();}
+  for (Int_t i=0; i<9; i++){  th1_l1muon_15_phi_fp[i]->Write();}
+  for (Int_t i=0; i<9; i++){  th1_l1muon_15_phi_fn[i]->Write();}
+  for (Int_t i=0; i<3; i++){  th1_l1muon_15_pt[i]->Write();}
+  for (Int_t i=0; i<9; i++){  th1_l1muon_15_pt_vp[i]->Write();}
+  for (Int_t i=0; i<9; i++){  th1_l1muon_15_pt_vn[i]->Write();}
+  for (Int_t i=0; i<9; i++){  th1_l1muon_15_pt_fp[i]->Write();}
+  for (Int_t i=0; i<9; i++){  th1_l1muon_15_pt_fn[i]->Write();}
   th1_l1muon_20_eta->Write();
-  th1_l1muon_20_phi->Write();
+  for (Int_t i=0; i<4; i++){  th1_l1muon_20_eta_vp[i]->Write();}
+  for (Int_t i=0; i<4; i++){  th1_l1muon_20_eta_vn[i]->Write();}
+  for (Int_t i=0; i<4; i++){  th1_l1muon_20_eta_fp[i]->Write();}
+  for (Int_t i=0; i<4; i++){  th1_l1muon_20_eta_fn[i]->Write();}
+  for (Int_t i=0; i<3; i++){  th1_l1muon_20_phi[i]->Write();}
+  for (Int_t i=0; i<9; i++){  th1_l1muon_20_phi_vp[i]->Write();}
+  for (Int_t i=0; i<9; i++){  th1_l1muon_20_phi_vn[i]->Write();}
+  for (Int_t i=0; i<9; i++){  th1_l1muon_20_phi_fp[i]->Write();}
+  for (Int_t i=0; i<9; i++){  th1_l1muon_20_phi_fn[i]->Write();}
+  for (Int_t i=0; i<3; i++){  th1_l1muon_20_pt[i]->Write();}
+  for (Int_t i=0; i<9; i++){  th1_l1muon_20_pt_vp[i]->Write();}
+  for (Int_t i=0; i<9; i++){  th1_l1muon_20_pt_vn[i]->Write();}
+  for (Int_t i=0; i<9; i++){  th1_l1muon_20_pt_fp[i]->Write();}
+  for (Int_t i=0; i<9; i++){  th1_l1muon_20_pt_fn[i]->Write();}
+
 
   // th1_tmdb->Write();
 
