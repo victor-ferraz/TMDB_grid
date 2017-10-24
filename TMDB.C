@@ -1,0 +1,325 @@
+#define TMDB_cxx
+#include "TMDB.h"
+#include <TH2.h>
+#include <TF1.h>
+#include <TStyle.h>
+#include <TCanvas.h>
+
+#include <iostream>
+#include <fstream>
+#include <cstdio>
+#include <cstdlib>
+#include <string>
+#include <bitset>
+
+#include <stdio.h>
+
+#include "threshold.h"
+#include "functions_mf.h"
+
+using namespace std;
+
+void TMDB::LoopPhysics(string fout)
+{
+   if (fChainPhysics == 0) return;
+
+   Long64_t nentries = fChainPhysics->GetEntries();
+   cout << "\nPhysics entries = " << nentries << endl;
+   Long64_t nbytes = 0, nb = 0;
+
+   // Event Loop
+   for (Long64_t jentry=0; jentry<nentries;jentry++) { // nentries
+
+      Long64_t ientry = LoadTreePhysics(jentry);
+      if (ientry < 0) { cout << "break " << jentry << endl; break;}
+      nb = fChainPhysics->GetEntry(jentry);   nbytes += nb;
+      if( jentry%1000 == 0 ) { cout << jentry << endl;}
+
+      if( (fout.find("express") != std::string::npos)  && (RunNumber==286411 || RunNumber==286474) ) { continue; }
+
+//      bool ignoreAside = ( RunNumber<287038 ) ? true: false;
+	  // if (lbn < 190 || lbn > 761) {continue;} // run 300487 (stable beam)
+	  // functions_mf
+	  TMDB::offline_loop(false);
+    TMDB::hlt_loop(false);
+    TMDB::l1_trigger_loop(false);
+
+   } // End of Event Loop
+
+   TMDB::print_root(fout);
+
+} // End of TMDB::LoopPhysics
+
+void TMDB::UserInit()
+{
+
+	cout << "Initializing variables...";
+
+  Int_t   nbins_eta     = 60;
+  Int_t   nbins_pt      = 27;
+  Int_t   nbins_phi     = 64;
+  Float_t bin_eta_low   = -3.0;
+  Float_t bin_eta_high  = 3.0;
+  Float_t bin_phi_low   = -3.15;
+  Float_t bin_phi_high  = 3.15;
+  Float_t bins_pt[28] = {0,2000,4000,6000,8000,10000,12000,14000,16000,18000,
+                          20000,22000,24000,26000,28000,30000,34000,38000,42000,
+                          46000,50000,54000,58000,62000,66000,70000,80000,100000};
+
+  th1_offline         = new TH1*[4];
+  th1_offline[0]      = new TH1F("offline", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_offline[1]      = new TH1F("offline_tight", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_offline[2]      = new TH1F("offline_medium", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_offline[3]      = new TH1F("offline_loose", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_offline_eta     = new TH1*[4];
+  th1_offline_eta[0]	= new TH1F("offline_eta", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_offline_eta[1]  = new TH1F("offline_eta_tight", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_offline_eta[2]  = new TH1F("offline_eta_medium", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_offline_eta[3]  = new TH1F("offline_eta_loose", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_offline_phi     = new TH1*[9];
+  th1_offline_phi[0]  = new TH1F("offline_phi", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_offline_phi[1]  = new TH1F("offline_phi_a", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_offline_phi[2]  = new TH1F("offline_phi_a_tight", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_offline_phi[3]  = new TH1F("offline_phi_a_medium", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_offline_phi[4]  = new TH1F("offline_phi_a_loose", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_offline_phi[5]  = new TH1F("offline_phi_c", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_offline_phi[6]  = new TH1F("offline_phi_c_tight", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_offline_phi[7]  = new TH1F("offline_phi_c_medium", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_offline_phi[8]  = new TH1F("offline_phi_c_loose", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_offline_pt      = new TH1*[4];
+  th1_offline_pt[0]   = new TH1F("offline_pt", "", nbins_pt, bins_pt);
+  th1_offline_pt[1]   = new TH1F("offline_pt_tight", "", nbins_pt, bins_pt);
+  th1_offline_pt[2]   = new TH1F("offline_pt_medium", "", nbins_pt, bins_pt);
+  th1_offline_pt[3]   = new TH1F("offline_pt_loose", "", nbins_pt, bins_pt);
+
+  // th1_hlt	          = new TH1F("hlt", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_hlt_eta       = new TH1*[2];
+  th1_hlt_eta[0]    = new TH1F("hlt_eta", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_hlt_eta[1]    = new TH1F("hlt_eta_passed", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_hlt_eta_vp    = new TH1*[4];
+  th1_hlt_eta_vp[0] = new TH1F("hlt_eta_vp", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_hlt_eta_vp[1] = new TH1F("hlt_eta_vp_tight", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_hlt_eta_vp[2] = new TH1F("hlt_eta_vp_medium", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_hlt_eta_vp[3] = new TH1F("hlt_eta_vp_loose", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_hlt_eta_vn    = new TH1*[4];
+  th1_hlt_eta_vn[0] = new TH1F("hlt_eta_vn", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_hlt_eta_vn[1] = new TH1F("hlt_eta_vn_tight", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_hlt_eta_vn[2] = new TH1F("hlt_eta_vn_medium", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_hlt_eta_vn[3] = new TH1F("hlt_eta_vn_loose", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_hlt_eta_fp    = new TH1*[4];
+  th1_hlt_eta_fp[0] = new TH1F("hlt_eta_fp", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_hlt_eta_fp[1] = new TH1F("hlt_eta_fp_tight", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_hlt_eta_fp[2] = new TH1F("hlt_eta_fp_medium", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_hlt_eta_fp[3] = new TH1F("hlt_eta_fp_loose", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_hlt_eta_fn    = new TH1*[4];
+  th1_hlt_eta_fn[0] = new TH1F("hlt_eta_fn", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_hlt_eta_fn[1] = new TH1F("hlt_eta_fn_tight", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_hlt_eta_fn[2] = new TH1F("hlt_eta_fn_medium", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_hlt_eta_fn[3] = new TH1F("hlt_eta_fn_loose", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_hlt_phi       = new TH1*[6];
+  th1_hlt_phi[0]    = new TH1F("hlt_phi", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi[1]    = new TH1F("hlt_phi_passed", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi[2]    = new TH1F("hlt_phi_a", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi[3]    = new TH1F("hlt_phi_a_passed", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi[4]    = new TH1F("hlt_phi_c", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi[5]    = new TH1F("hlt_phi_c_passed", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_vp    = new TH1*[9];
+  th1_hlt_phi_vp[0] = new TH1F("hlt_phi_vp", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_vp[1] = new TH1F("hlt_phi_vp_a", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_vp[2] = new TH1F("hlt_phi_vp_a_tight", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_vp[3] = new TH1F("hlt_phi_vp_a_medium", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_vp[4] = new TH1F("hlt_phi_vp_a_loose", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_vp[5] = new TH1F("hlt_phi_vp_c", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_vp[6] = new TH1F("hlt_phi_vp_c_tight", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_vp[7] = new TH1F("hlt_phi_vp_c_medium", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_vp[8] = new TH1F("hlt_phi_vp_c_loose", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_vn    = new TH1*[9];
+  th1_hlt_phi_vn[0] = new TH1F("hlt_phi_vn", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_vn[1] = new TH1F("hlt_phi_vn_a", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_vn[2] = new TH1F("hlt_phi_vn_a_tight", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_vn[3] = new TH1F("hlt_phi_vn_a_medium", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_vn[4] = new TH1F("hlt_phi_vn_a_loose", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_vn[5] = new TH1F("hlt_phi_vn_c", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_vn[6] = new TH1F("hlt_phi_vn_c_tight", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_vn[7] = new TH1F("hlt_phi_vn_c_medium", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_vn[8] = new TH1F("hlt_phi_vn_c_loose", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_fp    = new TH1*[9];
+  th1_hlt_phi_fp[0] = new TH1F("hlt_phi_fp", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_fp[1] = new TH1F("hlt_phi_fp_a", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_fp[2] = new TH1F("hlt_phi_fp_a_tight", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_fp[3] = new TH1F("hlt_phi_fp_a_medium", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_fp[4] = new TH1F("hlt_phi_fp_a_loose", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_fp[5] = new TH1F("hlt_phi_fp_c", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_fp[6] = new TH1F("hlt_phi_fp_c_tight", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_fp[7] = new TH1F("hlt_phi_fp_c_medium", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_fp[8] = new TH1F("hlt_phi_fp_loose", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_fn    = new TH1*[9];
+  th1_hlt_phi_fn[0] = new TH1F("hlt_phi_fn", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_fn[1] = new TH1F("hlt_phi_fn_a", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_fn[2] = new TH1F("hlt_phi_fn_a_tight", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_fn[3] = new TH1F("hlt_phi_fn_a_medium", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_fn[4] = new TH1F("hlt_phi_fn_a_loose", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_fn[5] = new TH1F("hlt_phi_fn_c", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_fn[6] = new TH1F("hlt_phi_fn_c_tight", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_fn[7] = new TH1F("hlt_phi_fn_c_medium", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_phi_fn[8] = new TH1F("hlt_phi_fn_c_loose", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_hlt_pt        = new TH1*[6];
+  th1_hlt_pt[0]     = new TH1F("hlt_pt", "", nbins_pt, bins_pt);
+  th1_hlt_pt[1]     = new TH1F("hlt_pt_passed", "", nbins_pt, bins_pt);
+  th1_hlt_pt[2]     = new TH1F("hlt_pt_barrel", "", nbins_pt, bins_pt);
+  th1_hlt_pt[3]     = new TH1F("hlt_pt_barrel_passed", "", nbins_pt, bins_pt);
+  th1_hlt_pt[4]     = new TH1F("hlt_pt_endcap", "", nbins_pt, bins_pt);
+  th1_hlt_pt[5]     = new TH1F("hlt_pt_endcap_passed", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vp     = new TH1*[12];
+  th1_hlt_pt_vp[0]  = new TH1F("hlt_pt_vp", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vp[1]  = new TH1F("hlt_pt_vp_tight", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vp[2]  = new TH1F("hlt_pt_vp_medium", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vp[3]  = new TH1F("hlt_pt_vp_loose", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vp[4]  = new TH1F("hlt_pt_vp_barrel", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vp[5]  = new TH1F("hlt_pt_vp_barrel_tight", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vp[6]  = new TH1F("hlt_pt_vp_barrel_medium", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vp[7]  = new TH1F("hlt_pt_vp_barrel_loose", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vp[8]  = new TH1F("hlt_pt_vp_endcap", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vp[9]  = new TH1F("hlt_pt_vp_endcap_tight", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vp[10] = new TH1F("hlt_pt_vp_endcap_medium", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vp[11] = new TH1F("hlt_pt_vp_endcap_loose", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vn     = new TH1*[12];
+  th1_hlt_pt_vn[0]  = new TH1F("hlt_pt_vn", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vn[1]  = new TH1F("hlt_pt_vn_tight", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vn[2]  = new TH1F("hlt_pt_vn_medium", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vn[3]  = new TH1F("hlt_pt_vn_loose", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vn[4]  = new TH1F("hlt_pt_vn_barrel", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vn[5]  = new TH1F("hlt_pt_vn_barrel_tight", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vn[6]  = new TH1F("hlt_pt_vn_barrel_medium", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vn[7]  = new TH1F("hlt_pt_vn_barrel_loose", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vn[8]  = new TH1F("hlt_pt_vn_endcap", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vn[9]  = new TH1F("hlt_pt_vn_endcap_tight", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vn[10] = new TH1F("hlt_pt_vn_endcap_medium", "", nbins_pt, bins_pt);
+  th1_hlt_pt_vn[11] = new TH1F("hlt_pt_vn_endcap_loose", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fp     = new TH1*[12];
+  th1_hlt_pt_fp[0]  = new TH1F("hlt_pt_fp", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fp[1]  = new TH1F("hlt_pt_fp_tight", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fp[2]  = new TH1F("hlt_pt_fp_medium", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fp[3]  = new TH1F("hlt_pt_fp_loose", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fp[4]  = new TH1F("hlt_pt_fp_barrel", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fp[5]  = new TH1F("hlt_pt_fp_barrel_tight", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fp[6]  = new TH1F("hlt_pt_fp_barrel_medium", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fp[7]  = new TH1F("hlt_pt_fp_barrel_loose", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fp[8]  = new TH1F("hlt_pt_fp_endcap", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fp[9]  = new TH1F("hlt_pt_fp_endcap_tight", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fp[10] = new TH1F("hlt_pt_fp_endcap_medium", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fp[11] = new TH1F("hlt_pt_fp_endcap_loose", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fn     = new TH1*[12];
+  th1_hlt_pt_fn[0]  = new TH1F("hlt_pt_fn", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fn[1]  = new TH1F("hlt_pt_fn_tight", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fn[2]  = new TH1F("hlt_pt_fn_medium", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fn[3]  = new TH1F("hlt_pt_fn_loose", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fn[4]  = new TH1F("hlt_pt_fn_barrel", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fn[5]  = new TH1F("hlt_pt_fn_barrel_tight", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fn[6]  = new TH1F("hlt_pt_fn_barrel_medium", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fn[7]  = new TH1F("hlt_pt_fn_barrel_loose", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fn[8]  = new TH1F("hlt_pt_fn_endcap", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fn[9]  = new TH1F("hlt_pt_fn_endcap_tight", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fn[10] = new TH1F("hlt_pt_fn_endcap_medium", "", nbins_pt, bins_pt);
+  th1_hlt_pt_fn[11] = new TH1F("hlt_pt_fn_endcap_loose", "", nbins_pt, bins_pt);
+
+  th1_l1muon	    = new TH1F("l1muon", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_eta  = new TH1F("l1muon_eta", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_phi  = new TH1F("l1muon_phi", "", nbins_phi,bin_phi_low,bin_phi_high);
+  // th1_l1muon_pt   = new TH1F("l1muon_pt", "", nbins_pt, bins_pt);
+
+  // th1_l1muon_15         = new TH1F("l1muon_15", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_15_eta       = new TH1F("l1muon_15_eta", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_15_eta_vp    = new TH1*[4];
+  th1_l1muon_15_eta_vp[0] = new TH1F("l1muon_15_eta_vp", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_15_eta_vp[1] = new TH1F("l1muon_15_eta_vp_tight", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_15_eta_vp[2] = new TH1F("l1muon_15_eta_vp_medium", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_15_eta_vp[3] = new TH1F("l1muon_15_eta_vp_loose", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_15_eta_vn    = new TH1*[4];
+  th1_l1muon_15_eta_vn[0] = new TH1F("l1muon_15_eta_vn", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_15_eta_vn[1] = new TH1F("l1muon_15_eta_vn_tight", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_15_eta_vn[2] = new TH1F("l1muon_15_eta_vn_medium", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_15_eta_vn[3] = new TH1F("l1muon_15_eta_vn_loose", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_15_eta_fp    = new TH1*[4];
+  th1_l1muon_15_eta_fp[0] = new TH1F("l1muon_15_eta_fp", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_15_eta_fp[1] = new TH1F("l1muon_15_eta_fp_tight", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_15_eta_fp[2] = new TH1F("l1muon_15_eta_fp_medium", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_15_eta_fp[3] = new TH1F("l1muon_15_eta_fp_loose", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_15_eta_fn    = new TH1*[4];
+  th1_l1muon_15_eta_fn[0] = new TH1F("l1muon_15_eta_fn", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_15_eta_fn[1] = new TH1F("l1muon_15_eta_fn_tight", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_15_eta_fn[2] = new TH1F("l1muon_15_eta_fn_medium", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_15_eta_fn[3] = new TH1F("l1muon_15_eta_fn_loose", "", nbins_eta,bin_eta_low,bin_eta_high);
+
+  th1_l1muon_15_phi     = new TH1F("l1muon_15_phi", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_l1muon_15_phi_vp  = new TH1F("l1muon_15_phi_vp", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_l1muon_15_phi_vn  = new TH1F("l1muon_15_phi_vn", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_l1muon_15_phi_fp  = new TH1F("l1muon_15_phi_fp", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_l1muon_15_phi_fn  = new TH1F("l1muon_15_phi_fn", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_l1muon_15_pt      = new TH1F("l1muon_15_pt", "", nbins_pt, bins_pt);
+  th1_l1muon_15_pt_vp   = new TH1F("l1muon_15_pt_vp", "", nbins_pt, bins_pt);
+  th1_l1muon_15_pt_vn   = new TH1F("l1muon_15_pt_vn", "", nbins_pt, bins_pt);
+  th1_l1muon_15_pt_fp   = new TH1F("l1muon_15_pt_fp", "", nbins_pt, bins_pt);
+  th1_l1muon_15_pt_fn   = new TH1F("l1muon_15_pt_fn", "", nbins_pt, bins_pt);
+
+  // th1_l1muon_20         = new TH1F("l1muon_20", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_20_eta     = new TH1F("l1muon_20_eta", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_20_eta_vp  = new TH1F("l1muon_20_eta_vp", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_20_eta_vn  = new TH1F("l1muon_20_eta_vn", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_20_eta_fp  = new TH1F("l1muon_20_eta_fp", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_20_eta_fn  = new TH1F("l1muon_20_eta_fn", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_l1muon_20_phi     = new TH1F("l1muon_20_phi", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_l1muon_20_phi_vp  = new TH1F("l1muon_20_phi_vp", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_l1muon_20_phi_vn  = new TH1F("l1muon_20_phi_vn", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_l1muon_20_phi_fp  = new TH1F("l1muon_20_phi_fp", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_l1muon_20_phi_fn  = new TH1F("l1muon_20_phi_fn", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_l1muon_20_pt      = new TH1F("l1muon_20_pt", "", nbins_pt, bins_pt);
+  th1_l1muon_20_pt_vp   = new TH1F("l1muon_20_pt_vp", "", nbins_pt, bins_pt);
+  th1_l1muon_20_pt_vn   = new TH1F("l1muon_20_pt_vn", "", nbins_pt, bins_pt);
+  th1_l1muon_20_pt_fp   = new TH1F("l1muon_20_pt_fp", "", nbins_pt, bins_pt);
+  th1_l1muon_20_pt_fn   = new TH1F("l1muon_20_pt_fn", "", nbins_pt, bins_pt);
+
+  th1_tmdb  	          = new TH1F("tmdb", "", nbins_eta,bin_eta_low,bin_eta_high);
+
+  th1_tmdb_15           = new TH1F("tmdb_15", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_tmdb_15_eta       = new TH1F("tmdb_15_eta", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_tmdb_15_eta_vp    = new TH1F("tmdb_15_eta_vp", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_tmdb_15_eta_vn    = new TH1F("tmdb_15_eta_vn", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_tmdb_15_eta_fp    = new TH1F("tmdb_15_eta_fp", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_tmdb_15_eta_fn    = new TH1F("tmdb_15_eta_fn", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_tmdb_15_phi       = new TH1F("tmdb_15_phi", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_tmdb_15_phi_vp    = new TH1F("tmdb_15_phi_vp", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_tmdb_15_phi_vn    = new TH1F("tmdb_15_phi_vn", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_tmdb_15_phi_fp    = new TH1F("tmdb_15_phi_fp", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_tmdb_15_phi_fn    = new TH1F("tmdb_15_phi_fn", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_tmdb_20           = new TH1F("tmdb_20", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_tmdb_20_eta       = new TH1F("tmdb_20_eta", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_tmdb_20_eta_vp    = new TH1F("tmdb_20_eta_vp", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_tmdb_20_eta_vn    = new TH1F("tmdb_20_eta_vn", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_tmdb_20_eta_fp    = new TH1F("tmdb_20_eta_fp", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_tmdb_20_eta_fn    = new TH1F("tmdb_20_eta_fn", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_tmdb_20_phi       = new TH1F("tmdb_20_phi", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_tmdb_20_phi_vp    = new TH1F("tmdb_20_phi_vp", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_tmdb_20_phi_vn    = new TH1F("tmdb_20_phi_vn", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_tmdb_20_phi_fp    = new TH1F("tmdb_20_phi_fp", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_tmdb_20_phi_fn    = new TH1F("tmdb_20_phi_fn", "", nbins_phi,bin_phi_low,bin_phi_high);
+
+  th1_mf_out        = new TH1*[512];
+  th1_mf_decision   = new TH1*[512];
+  // loop for initialize th1_mf* histograms
+  for(Int_t side=0; side<total_tile_sides; side++) { // side loop
+  	for(Int_t module=0; module<total_tile_modules; module++) { // module loop
+  		for(Int_t channel=0; channel<total_tmdb_mod_ch; channel++) { // channel loop
+        Int_t hnumber = side*total_tile_modules*total_tmdb_mod_ch + module*total_tmdb_mod_ch + channel;
+        char buf1[20];char buf2[25];char title[50];
+        sprintf(buf1, "mf_out_%d", hnumber); sprintf(buf2, "mf_decision_%d", hnumber);
+        sprintf(title, "Side: %d, Module: %d, Channel: %d", side,module,channel);
+        // cout << side*total_tile_modules*total_tmdb_mod_ch+module*total_tmdb_mod_ch+channel << endl;
+        th1_mf_out[side*total_tile_modules*total_tmdb_mod_ch+module*total_tmdb_mod_ch+channel]      = new TH1F(buf1, title, 100,0,200000);
+        th1_mf_decision[side*total_tile_modules*total_tmdb_mod_ch+module*total_tmdb_mod_ch+channel] = new TH1F(buf2, title, 100,0,200000);
+      }
+    }
+  }
+
+	cout << "\tOk!" << endl;
+} // End of UserInitMF
