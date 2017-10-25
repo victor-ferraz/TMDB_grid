@@ -263,13 +263,15 @@ void TMDB::l1_trigger_loop( bool ignoreAside )
     Int_t vetoed  = trig_L1_mu_vetoed->at(nloop);
     bool isAside  = (trig_L1_mu_hemisphere->at(nloop)==1) ? true: false;
     // bool isAside  = (eta>0.0) ? true: false;
-    bool isEndcap = (trig_L1_mu_source->at(nloop)==1) ? true: false;
     bool isBarrel = (trig_L1_mu_source->at(nloop)==0) ? true: false;
-    Int_t tile_module = tilemodule_to_check(sector);
+    bool isEndcap = (trig_L1_mu_source->at(nloop)==1) ? true: false;
+    bool isForward= (trig_L1_mu_source->at(nloop)==2) ? true: false;
+    // Int_t tile_module = tilemodule_to_check(sector);
     // if(!(isEndcap && pt_thr >= 5 && ssc < 6)) { continue; }
     // if( fabs(eta) < 1.0 || 1.3 < fabs(eta) )  { continue; }
     // if(vetoed) {continue;}
     if( ignoreAside && isAside) {continue;} // test
+    // if( isForward) {continue;} // test
 
     // Filling L1 histograms
     th1_l1muon->Fill(eta);
@@ -280,16 +282,37 @@ void TMDB::l1_trigger_loop( bool ignoreAside )
     if (pt_thr >= 5) {
       th1_l1muon_15_eta->Fill(eta);
       th1_l1muon_15_phi[0]->Fill(phi);
-      if(isAside){  th1_l1muon_15_phi[1]->Fill(phi);}
-      else{         th1_l1muon_15_phi[2]->Fill(phi);}
-    }
+      if(isBarrel){
+        th1_l1muon_15_phi[1]->Fill(phi);
+        if(isAside){  th1_l1muon_15_phi[4]->Fill(phi);}
+        else{         th1_l1muon_15_phi[7]->Fill(phi);}
+      }
+      if(isEndcap){
+        th1_l1muon_15_phi[2]->Fill(phi);
+        if(isAside){  th1_l1muon_15_phi[5]->Fill(phi);}
+        else{         th1_l1muon_15_phi[8]->Fill(phi);}
+      }
+      if(isAside){  th1_l1muon_15_phi[3]->Fill(phi);}
+      else{         th1_l1muon_15_phi[6]->Fill(phi);}
+    } // end of L1MU15 if
+
     // For L1MU20
     if (pt_thr == 6) {
       th1_l1muon_20_eta->Fill(eta);
       th1_l1muon_20_phi[0]->Fill(phi);
-      if(isAside){  th1_l1muon_20_phi[1]->Fill(phi);}
-      else{         th1_l1muon_20_phi[2]->Fill(phi);}
-    }
+      if(isBarrel){
+        th1_l1muon_20_phi[1]->Fill(phi);
+        if(isAside){  th1_l1muon_20_phi[4]->Fill(phi);}
+        else{         th1_l1muon_20_phi[7]->Fill(phi);}
+      }
+      if(isEndcap){
+        th1_l1muon_20_phi[2]->Fill(phi);
+        if(isAside){  th1_l1muon_20_phi[5]->Fill(phi);}
+        else{         th1_l1muon_20_phi[8]->Fill(phi);}
+      }
+      if(isAside){  th1_l1muon_20_phi[3]->Fill(phi);}
+      else{         th1_l1muon_20_phi[6]->Fill(phi);}
+    } // end of L1MU20 if
 
     // offline muon associated
     for(Int_t muon=0; muon<mu_n; muon++) {
@@ -301,8 +324,48 @@ void TMDB::l1_trigger_loop( bool ignoreAside )
 
       Float_t dR = calc_dR(eta-muon_eta , phi-muon_phi);
 
+      if (pt_thr >= 5){th1_l1muon_15_pt[0]->Fill(muon_pt);}
+
       // true positive: it has an offline muon associated
       if(dR < 0.1){
+        if (pt_thr >= 5){
+          th1_l1muon_15_eta_vp[0]->Fill(eta);
+
+          th1_l1muon_15_phi_vp[0]->Fill(phi);
+          if(isBarrel){
+            th1_l1muon_15_phi_vp[4]->Fill(phi);
+            if(isAside){  th1_l1muon_15_phi_vp[16]->Fill(phi);}
+            else{         th1_l1muon_15_phi_vp[28]->Fill(phi);}
+          }
+          if(isEndcap){
+            th1_l1muon_15_phi_vp[8]->Fill(phi);
+            if(isAside){  th1_l1muon_15_phi_vp[20]->Fill(phi);}
+            else{         th1_l1muon_15_phi_vp[32]->Fill(phi);}
+          }
+          if(isAside){  th1_l1muon_15_phi_vp[12]->Fill(phi);}
+          else{         th1_l1muon_15_phi_vp[24]->Fill(phi);}
+
+
+
+          // Quality criteria
+          switch (quality) {
+            case 0 /* tight */ :{
+              th1_l1muon_15_eta_vp[1]->Fill(eta);
+              th1_l1muon_15_phi_vp[1]->Fill(phi);
+              break;
+            }
+            case 1 /* medium */:{
+              th1_l1muon_15_eta_vp[2]->Fill(eta);
+              th1_l1muon_15_phi_vp[2]->Fill(phi);
+              break;
+            }
+            case 2 /* loose */ :{
+              th1_l1muon_15_eta_vp[3]->Fill(eta);
+              th1_l1muon_15_phi_vp[3]->Fill(phi);
+              break;
+            }
+          }
+        }
 
       } // end of true positive
 
@@ -377,31 +440,31 @@ void TMDB::print_root(string fout)
   for (Int_t i=0; i<4; i++){  th1_l1muon_15_eta_vn[i]->Write();}
   for (Int_t i=0; i<4; i++){  th1_l1muon_15_eta_fp[i]->Write();}
   for (Int_t i=0; i<4; i++){  th1_l1muon_15_eta_fn[i]->Write();}
-  for (Int_t i=0; i<3; i++){  th1_l1muon_15_phi[i]->Write();}
-  for (Int_t i=0; i<9; i++){  th1_l1muon_15_phi_vp[i]->Write();}
-  for (Int_t i=0; i<9; i++){  th1_l1muon_15_phi_vn[i]->Write();}
-  for (Int_t i=0; i<9; i++){  th1_l1muon_15_phi_fp[i]->Write();}
-  for (Int_t i=0; i<9; i++){  th1_l1muon_15_phi_fn[i]->Write();}
+  for (Int_t i=0; i<9; i++){  th1_l1muon_15_phi[i]->Write();}
+  for (Int_t i=0; i<36; i++){  th1_l1muon_15_phi_vp[i]->Write();}
+  for (Int_t i=0; i<36; i++){  th1_l1muon_15_phi_vn[i]->Write();}
+  for (Int_t i=0; i<36; i++){  th1_l1muon_15_phi_fp[i]->Write();}
+  for (Int_t i=0; i<36; i++){  th1_l1muon_15_phi_fn[i]->Write();}
   for (Int_t i=0; i<3; i++){  th1_l1muon_15_pt[i]->Write();}
-  for (Int_t i=0; i<9; i++){  th1_l1muon_15_pt_vp[i]->Write();}
-  for (Int_t i=0; i<9; i++){  th1_l1muon_15_pt_vn[i]->Write();}
-  for (Int_t i=0; i<9; i++){  th1_l1muon_15_pt_fp[i]->Write();}
-  for (Int_t i=0; i<9; i++){  th1_l1muon_15_pt_fn[i]->Write();}
+  for (Int_t i=0; i<12; i++){  th1_l1muon_15_pt_vp[i]->Write();}
+  for (Int_t i=0; i<12; i++){  th1_l1muon_15_pt_vn[i]->Write();}
+  for (Int_t i=0; i<12; i++){  th1_l1muon_15_pt_fp[i]->Write();}
+  for (Int_t i=0; i<12; i++){  th1_l1muon_15_pt_fn[i]->Write();}
   th1_l1muon_20_eta->Write();
   for (Int_t i=0; i<4; i++){  th1_l1muon_20_eta_vp[i]->Write();}
   for (Int_t i=0; i<4; i++){  th1_l1muon_20_eta_vn[i]->Write();}
   for (Int_t i=0; i<4; i++){  th1_l1muon_20_eta_fp[i]->Write();}
   for (Int_t i=0; i<4; i++){  th1_l1muon_20_eta_fn[i]->Write();}
-  for (Int_t i=0; i<3; i++){  th1_l1muon_20_phi[i]->Write();}
-  for (Int_t i=0; i<9; i++){  th1_l1muon_20_phi_vp[i]->Write();}
-  for (Int_t i=0; i<9; i++){  th1_l1muon_20_phi_vn[i]->Write();}
-  for (Int_t i=0; i<9; i++){  th1_l1muon_20_phi_fp[i]->Write();}
-  for (Int_t i=0; i<9; i++){  th1_l1muon_20_phi_fn[i]->Write();}
+  for (Int_t i=0; i<9; i++){  th1_l1muon_20_phi[i]->Write();}
+  for (Int_t i=0; i<36; i++){  th1_l1muon_20_phi_vp[i]->Write();}
+  for (Int_t i=0; i<36; i++){  th1_l1muon_20_phi_vn[i]->Write();}
+  for (Int_t i=0; i<36; i++){  th1_l1muon_20_phi_fp[i]->Write();}
+  for (Int_t i=0; i<36; i++){  th1_l1muon_20_phi_fn[i]->Write();}
   for (Int_t i=0; i<3; i++){  th1_l1muon_20_pt[i]->Write();}
-  for (Int_t i=0; i<9; i++){  th1_l1muon_20_pt_vp[i]->Write();}
-  for (Int_t i=0; i<9; i++){  th1_l1muon_20_pt_vn[i]->Write();}
-  for (Int_t i=0; i<9; i++){  th1_l1muon_20_pt_fp[i]->Write();}
-  for (Int_t i=0; i<9; i++){  th1_l1muon_20_pt_fn[i]->Write();}
+  for (Int_t i=0; i<12; i++){  th1_l1muon_20_pt_vp[i]->Write();}
+  for (Int_t i=0; i<12; i++){  th1_l1muon_20_pt_vn[i]->Write();}
+  for (Int_t i=0; i<12; i++){  th1_l1muon_20_pt_fp[i]->Write();}
+  for (Int_t i=0; i<12; i++){  th1_l1muon_20_pt_fn[i]->Write();}
 
 
   // th1_tmdb->Write();
