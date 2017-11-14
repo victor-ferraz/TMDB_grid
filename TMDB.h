@@ -706,6 +706,7 @@ public :
   virtual void		loop_hlt(bool ignoreAside);
   virtual void		loop_l1_trigger(bool ignoreAside);
   virtual void		loop_tmdb(bool ignoreAside);
+  virtual void		loop_extra(bool ignoreAside);
 	virtual Int_t		tile_phi_module(Float_t phi);
 	virtual Float_t 	calc_dR(Float_t dEta, Float_t dPhi);
 
