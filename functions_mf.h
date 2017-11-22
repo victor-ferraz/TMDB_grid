@@ -14,9 +14,24 @@ void TMDB::loop_offline( bool ignoreAside )
     // if(muon_pt<15000) {continue;} // pt cut
 
     th1_offline[0]->Fill(muon_eta);
-    if (quality == 0){th1_offline[1]->Fill(muon_eta);} // Tight Working Point
-    if (quality == 1){th1_offline[2]->Fill(muon_eta);} // Medium Working Point
-    if (quality == 2){th1_offline[3]->Fill(muon_eta);} // Loose Working Point
+    if (quality == 0){ // Tight Working Point
+        th1_offline[1]->Fill(muon_eta);
+        th1_offline[2]->Fill(muon_eta);
+        th1_offline[3]->Fill(muon_eta);
+        th1_offline[4]->Fill(muon_eta);
+    }
+    if (quality == 1){ // Medium Working Point
+      th1_offline[2]->Fill(muon_eta);
+      th1_offline[3]->Fill(muon_eta);
+      th1_offline[4]->Fill(muon_eta);
+    }
+    if (quality == 2){ // Loose Working Point
+      th1_offline[3]->Fill(muon_eta);
+      th1_offline[4]->Fill(muon_eta);
+    }
+    if (quality == 3){ // Very Loose Working Point
+      th1_offline[4]->Fill(muon_eta);
+    }
 
     // if(!isCombined)   {continue;} // combined muon
     // if(!isCaloTag)   {continue;} // colorimeter tagged  muon
@@ -701,7 +716,7 @@ void TMDB::print_root(string fout)
   TFile *output = new TFile(rootfile.c_str(), "recreate");
 
   // Writing offline histograms
-  for (Int_t i=0; i<4; i++){th1_offline[i]->Write();}
+  for (Int_t i=0; i<5; i++){th1_offline[i]->Write();}
   for (Int_t i=0; i<4; i++){th1_offline_eta[i]->Write();}
   for (Int_t i=0; i<9; i++){th1_offline_phi[i]->Write();}
   for (Int_t i=0; i<12; i++){th1_offline_pt[i]->Write();}

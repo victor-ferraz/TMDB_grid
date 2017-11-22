@@ -68,11 +68,12 @@ void TMDB::UserInit()
                           20000,22000,24000,26000,28000,30000,34000,38000,42000,
                           46000,50000,54000,58000,62000,66000,70000,80000,100000};
 
-  th1_offline         = new TH1*[4];
+  th1_offline         = new TH1*[5];
   th1_offline[0]      = new TH1F("offline", "", nbins_eta,bin_eta_low,bin_eta_high);
   th1_offline[1]      = new TH1F("offline_tight", "", nbins_eta,bin_eta_low,bin_eta_high);
   th1_offline[2]      = new TH1F("offline_medium", "", nbins_eta,bin_eta_low,bin_eta_high);
   th1_offline[3]      = new TH1F("offline_loose", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_offline[4]      = new TH1F("offline_veryloose", "", nbins_eta,bin_eta_low,bin_eta_high);
   th1_offline_eta     = new TH1*[4];
   th1_offline_eta[0]	= new TH1F("offline_eta", "", nbins_eta,bin_eta_low,bin_eta_high);
   th1_offline_eta[1]  = new TH1F("offline_eta_tight", "", nbins_eta,bin_eta_low,bin_eta_high);
