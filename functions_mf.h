@@ -13,63 +13,101 @@ void TMDB::loop_offline( bool ignoreAside )
     Int_t quality	  = mu_quality->at(muon);
     // if(muon_pt<15000) {continue;} // pt cut
 
-    th1_offline[0]->Fill(muon_eta);
-    if (quality == 0){ // Tight Working Point
-        th1_offline[1]->Fill(muon_eta);
-        th1_offline[2]->Fill(muon_eta);
-        th1_offline[3]->Fill(muon_eta);
-        th1_offline[4]->Fill(muon_eta);
-    }
-    if (quality == 1){ // Medium Working Point
-      th1_offline[2]->Fill(muon_eta);
-      th1_offline[3]->Fill(muon_eta);
-      th1_offline[4]->Fill(muon_eta);
-    }
-    if (quality == 2){ // Loose Working Point
-      th1_offline[3]->Fill(muon_eta);
-      th1_offline[4]->Fill(muon_eta);
-    }
-    if (quality == 3){ // Very Loose Working Point
-      th1_offline[4]->Fill(muon_eta);
-    }
-
-    // if(!isCombined)   {continue;} // combined muon
-    // if(!isCaloTag)   {continue;} // colorimeter tagged  muon
-
-    // Only Combined Muons
+    // All muons (Very Loose)
     th1_offline_eta[0]->Fill(muon_eta);
     th1_offline_phi[0]->Fill(muon_phi);
-    if(isAside){ th1_offline_phi[1]->Fill(muon_phi);}
-    else{        th1_offline_phi[5]->Fill(muon_phi);}
+    if(isAside){ th1_offline_phi[4]->Fill(muon_phi);}
+    else{        th1_offline_phi[8]->Fill(muon_phi);}
     th1_offline_pt[0]->Fill(muon_pt);
     if(isBarrel){th1_offline_pt[4]->Fill(muon_pt);}
     if(isEndcap){th1_offline_pt[8]->Fill(muon_pt);}
 
-    // Working point criterias
-    if (quality == 0){ // Tight Working Point
-      th1_offline_eta[1]->Fill(muon_eta);
-      if(isAside){  th1_offline_phi[2]->Fill(muon_phi);} // A side
-      else{         th1_offline_phi[6]->Fill(muon_phi);} // C side
-      th1_offline_pt[1]->Fill(muon_pt);
-      if(isBarrel){th1_offline_pt[5]->Fill(muon_pt);}
-      if(isEndcap){th1_offline_pt[9]->Fill(muon_pt);}
-    }
-    if (quality == 1){ // Medium Working Point
-      th1_offline_eta[2]->Fill(muon_eta);
-      if(isAside){  th1_offline_phi[3]->Fill(muon_phi);} // A side
-      else{         th1_offline_phi[7]->Fill(muon_phi);} // C side
-      th1_offline_pt[2]->Fill(muon_pt);
-      if(isBarrel){th1_offline_pt[6]->Fill(muon_pt);}
-      if(isEndcap){th1_offline_pt[10]->Fill(muon_pt);}
-    }
-    if (quality == 2){ // Loose Working Point
-      th1_offline_eta[3]->Fill(muon_eta);
-      if(isAside){  th1_offline_phi[4]->Fill(muon_phi);} // A side
-      else{         th1_offline_phi[8]->Fill(muon_phi);} // C side
-      th1_offline_pt[3]->Fill(muon_pt);
-      if(isBarrel){th1_offline_pt[7]->Fill(muon_pt);}
-      if(isEndcap){th1_offline_pt[11]->Fill(muon_pt);}
-    }
+    // ------ Working point criterias -------
+    // Tight Working Point
+    if (quality == 0){
+      // Eta Filling
+      th1_offline_eta[1]->Fill(muon_eta); // Tight hist
+      th1_offline_eta[2]->Fill(muon_eta); // Medium hist
+      th1_offline_eta[3]->Fill(muon_eta); // Loose hist
+      // Phi Filling
+      th1_offline_phi[1]->Fill(muon_phi); // Tight hist
+      th1_offline_phi[2]->Fill(muon_phi); // Medium hist
+      th1_offline_phi[3]->Fill(muon_phi); // Loose hist
+      if(isAside){ // A side
+        th1_offline_phi[5]->Fill(muon_phi); // Tight hist
+        th1_offline_phi[6]->Fill(muon_phi); // Medium hist
+        th1_offline_phi[7]->Fill(muon_phi); // Loose hist
+      }else{ // C side
+        th1_offline_phi[9]->Fill(muon_phi); // Tight hist
+        th1_offline_phi[10]->Fill(muon_phi); // Medium hist
+        th1_offline_phi[11]->Fill(muon_phi); // Loose hist
+      }
+      // Pt Filling
+      th1_offline_pt[1]->Fill(muon_pt); // Tight hist
+      th1_offline_pt[2]->Fill(muon_pt); // Medium hist
+      th1_offline_pt[3]->Fill(muon_pt); // Loose hist
+      if(isBarrel){ // Barrel region
+        th1_offline_pt[5]->Fill(muon_pt); // Tight hist
+        th1_offline_pt[6]->Fill(muon_pt); // Medium hist
+        th1_offline_pt[7]->Fill(muon_pt); // Loose hist
+      }
+      if(isEndcap){ // Endcap region
+        th1_offline_pt[9]->Fill(muon_pt); // Tight hist
+        th1_offline_pt[10]->Fill(muon_pt); // Medium hist
+        th1_offline_pt[11]->Fill(muon_pt); // Loose hist
+      }
+    } // end of Tight Working Point
+
+    // Medium Working Point
+    if (quality == 1){
+      // Eta Filling
+      th1_offline_eta[2]->Fill(muon_eta); // Medium hist
+      th1_offline_eta[3]->Fill(muon_eta); // Loose hist
+      // Phi Filling
+      th1_offline_phi[2]->Fill(muon_phi); // Medium hist
+      th1_offline_phi[3]->Fill(muon_phi); // Loose hist
+      if(isAside){ // A side
+        th1_offline_phi[6]->Fill(muon_phi); // Medium hist
+        th1_offline_phi[7]->Fill(muon_phi); // Loose hist
+      }else{ // C side
+        th1_offline_phi[10]->Fill(muon_phi); // Medium hist
+        th1_offline_phi[11]->Fill(muon_phi); // Loose hist
+      }
+      // Pt Filling
+      th1_offline_pt[2]->Fill(muon_pt); // Medium hist
+      th1_offline_pt[3]->Fill(muon_pt); // Loose hist
+      if(isBarrel){ // Barrel region
+        th1_offline_pt[6]->Fill(muon_pt); // Medium hist
+        th1_offline_pt[7]->Fill(muon_pt); // Loose hist
+      }
+      if(isEndcap){ // Endcap region
+        th1_offline_pt[10]->Fill(muon_pt); // Medium hist
+        th1_offline_pt[11]->Fill(muon_pt); // Loose hist
+      }
+    } // enf of Medium Working Point
+
+    // Loose Working Point
+    if (quality == 2){
+      // Eta Filling
+      th1_offline_eta[3]->Fill(muon_eta); // Loose hist
+      // Phi Filling
+      th1_offline_phi[3]->Fill(muon_phi); // Loose hist
+      if(isAside){ // A side
+        th1_offline_phi[7]->Fill(muon_phi); // Loose hist
+      }else{ // C side
+        th1_offline_phi[11]->Fill(muon_phi); // Loose hist
+      }
+      // Pt Filling
+      th1_offline_pt[3]->Fill(muon_pt); // Loose hist
+      if(isBarrel){ // Barrel region
+        th1_offline_pt[7]->Fill(muon_pt); // Loose hist
+      }
+      if(isEndcap){ // Endcap region
+        th1_offline_pt[11]->Fill(muon_pt); // Loose hist
+      }
+    } // end of Loose Working Point
+    // ------ End of Working point criterias -------
+
   } // end of offline muon loop
 } // end of offline loop function
 
@@ -716,9 +754,9 @@ void TMDB::print_root(string fout)
   TFile *output = new TFile(rootfile.c_str(), "recreate");
 
   // Writing offline histograms
-  for (Int_t i=0; i<5; i++){th1_offline[i]->Write();}
+  // for (Int_t i=0; i<5; i++){th1_offline[i]->Write();}
   for (Int_t i=0; i<4; i++){th1_offline_eta[i]->Write();}
-  for (Int_t i=0; i<9; i++){th1_offline_phi[i]->Write();}
+  for (Int_t i=0; i<12; i++){th1_offline_phi[i]->Write();}
   for (Int_t i=0; i<12; i++){th1_offline_pt[i]->Write();}
 
   // Writing HLT histograms
