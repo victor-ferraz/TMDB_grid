@@ -1,6 +1,6 @@
 #define TMDB_cxx
 #include "TMDB.h"
-#include <TH2.h>
+#include <TH1.h>
 #include <TF1.h>
 #include <TStyle.h>
 #include <TCanvas.h>
@@ -39,12 +39,16 @@ void TMDB::LoopPhysics(string fout)
 
 //      bool ignoreAside = ( RunNumber<287038 ) ? true: false;
 	  // if (lbn < 190 || lbn > 761) {continue;} // run 300487 (stable beam)
-	  // functions_mf
+
+    // if(mu_n !=1 || trig_L1_mu_n !=1){continue;} // only events with one muon in L1 and offline
+
+    // functions_mf
 	  TMDB::loop_offline(false);
     TMDB::loop_hlt(false);
     TMDB::loop_l1_trigger(false);
     TMDB::loop_tmdb(false);
     TMDB::loop_extra(false);
+    // TMDB::loop_save_muons(fout);
 
    } // End of Event Loop
 
@@ -57,7 +61,7 @@ void TMDB::UserInit()
 
 	cout << "Initializing variables...";
 
-  Int_t   nbins_eta     = 60;
+  Int_t   nbins_eta     = 50;
   Int_t   nbins_pt      = 27;
   Int_t   nbins_phi     = 64;
   Float_t bin_eta_low   = -2.5;
@@ -67,12 +71,24 @@ void TMDB::UserInit()
   Float_t bins_pt[28] = {0,2000,4000,6000,8000,10000,12000,14000,16000,18000,
                           20000,22000,24000,26000,28000,30000,34000,38000,42000,
                           46000,50000,54000,58000,62000,66000,70000,80000,100000};
+  // set default Sumw2 to histograms
+  TH1::SetDefaultSumw2(kTRUE);
 
-  th1_offline_eta     = new TH1*[4];
+  // th1_mc    = new TH1*[3];
+  // th1_mc[0]	= new TH1F("mc_eta", "", nbins_eta,bin_eta_low,bin_eta_high);
+  // th1_mc[1]	= new TH1F("mc_phi", "", nbins_phi,bin_phi_low,bin_phi_high);
+  // th1_mc[2]	= new TH1F("mc_pt", "", nbins_pt, bins_pt);
+
+  th1_offline_eta     = new TH1*[9];
   th1_offline_eta[0]	= new TH1F("offline_eta", "", nbins_eta,bin_eta_low,bin_eta_high);
   th1_offline_eta[1]  = new TH1F("offline_eta_tight", "", nbins_eta,bin_eta_low,bin_eta_high);
   th1_offline_eta[2]  = new TH1F("offline_eta_medium", "", nbins_eta,bin_eta_low,bin_eta_high);
   th1_offline_eta[3]  = new TH1F("offline_eta_loose", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_offline_eta[4]	= new TH1F("offline_eta_20gev", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_offline_eta[5]	= new TH1F("offline_eta_20gev_tight", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_offline_eta[6]	= new TH1F("offline_eta_20gev_medium", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_offline_eta[7]	= new TH1F("offline_eta_20gev_loose", "", nbins_eta,bin_eta_low,bin_eta_high);
+  th1_offline_eta[8]	= new TH1F("offline_eta_calotag", "", nbins_eta,bin_eta_low,bin_eta_high);
   th1_offline_phi     = new TH1*[12];
   th1_offline_phi[0]  = new TH1F("offline_phi", "", nbins_phi,bin_phi_low,bin_phi_high);
   th1_offline_phi[1]  = new TH1F("offline_phi_tight", "", nbins_phi,bin_phi_low,bin_phi_high);
@@ -86,7 +102,7 @@ void TMDB::UserInit()
   th1_offline_phi[9]  = new TH1F("offline_phi_c_tight", "", nbins_phi,bin_phi_low,bin_phi_high);
   th1_offline_phi[10]  = new TH1F("offline_phi_c_medium", "", nbins_phi,bin_phi_low,bin_phi_high);
   th1_offline_phi[11]  = new TH1F("offline_phi_c_loose", "", nbins_phi,bin_phi_low,bin_phi_high);
-  th1_offline_pt      = new TH1*[12];
+  th1_offline_pt      = new TH1*[16];
   th1_offline_pt[0]   = new TH1F("offline_pt", "", nbins_pt, bins_pt);
   th1_offline_pt[1]   = new TH1F("offline_pt_tight", "", nbins_pt, bins_pt);
   th1_offline_pt[2]   = new TH1F("offline_pt_medium", "", nbins_pt, bins_pt);
@@ -99,6 +115,10 @@ void TMDB::UserInit()
   th1_offline_pt[9]   = new TH1F("offline_pt_endcap_tight", "", nbins_pt, bins_pt);
   th1_offline_pt[10]   = new TH1F("offline_pt_endcap_medium", "", nbins_pt, bins_pt);
   th1_offline_pt[11]   = new TH1F("offline_pt_endcap_loose", "", nbins_pt, bins_pt);
+  th1_offline_pt[12]   = new TH1F("offline_pt_tmdbroi", "", nbins_pt, bins_pt);
+  th1_offline_pt[13]   = new TH1F("offline_pt_tmdbroi_tight", "", nbins_pt, bins_pt);
+  th1_offline_pt[14]   = new TH1F("offline_pt_tmdbroi_medium", "", nbins_pt, bins_pt);
+  th1_offline_pt[15]   = new TH1F("offline_pt_tmdbroi_loose", "", nbins_pt, bins_pt);
 
   // th1_hlt	          = new TH1F("hlt", "", nbins_eta,bin_eta_low,bin_eta_high);
   th1_hlt_eta       = new TH1*[2];
@@ -800,6 +820,12 @@ void TMDB::UserInit()
   // th1_tmdb_15_phi_fn[9]   = new TH1F("tmdb_15_phi_fn_c_tight", "", nbins_phi,bin_phi_low,bin_phi_high);
   // th1_tmdb_15_phi_fn[10]  = new TH1F("tmdb_15_phi_fn_c_medium", "", nbins_phi,bin_phi_low,bin_phi_high);
   // th1_tmdb_15_phi_fn[11]  = new TH1F("tmdb_15_phi_fn_c_loose", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_tmdb_15_pt_vp      = new TH1*[5];
+  th1_tmdb_15_pt_vp[0]   = new TH1F("tmdb_15_pt_vp", "", nbins_pt, bins_pt);
+  th1_tmdb_15_pt_vp[1]   = new TH1F("tmdb_15_pt_vp_tight", "", nbins_pt, bins_pt);
+  th1_tmdb_15_pt_vp[2]   = new TH1F("tmdb_15_pt_vp_medium", "", nbins_pt, bins_pt);
+  th1_tmdb_15_pt_vp[3]   = new TH1F("tmdb_15_pt_vp_loose", "", nbins_pt, bins_pt);
+  th1_tmdb_15_pt_vp[4]   = new TH1F("tmdb_15_pt_vp_hlt", "", nbins_pt, bins_pt);
 
   // th1_tmdb_20           = new TH1F("tmdb_20", "", nbins_eta,bin_eta_low,bin_eta_high);
   // th1_tmdb_20_eta       = new TH1F("tmdb_20_eta", "", nbins_eta,bin_eta_low,bin_eta_high);
@@ -883,26 +909,54 @@ void TMDB::UserInit()
   // th1_tmdb_20_phi_fn[9]   = new TH1F("tmdb_20_phi_fn_c_tight", "", nbins_phi,bin_phi_low,bin_phi_high);
   // th1_tmdb_20_phi_fn[10]  = new TH1F("tmdb_20_phi_fn_c_medium", "", nbins_phi,bin_phi_low,bin_phi_high);
   // th1_tmdb_20_phi_fn[11]  = new TH1F("tmdb_20_phi_fn_c_loose", "", nbins_phi,bin_phi_low,bin_phi_high);
+  th1_tmdb_20_pt_vp      = new TH1*[5];
+  th1_tmdb_20_pt_vp[0]   = new TH1F("tmdb_20_pt_vp", "", nbins_pt, bins_pt);
+  th1_tmdb_20_pt_vp[1]   = new TH1F("tmdb_20_pt_vp_tight", "", nbins_pt, bins_pt);
+  th1_tmdb_20_pt_vp[2]   = new TH1F("tmdb_20_pt_vp_medium", "", nbins_pt, bins_pt);
+  th1_tmdb_20_pt_vp[3]   = new TH1F("tmdb_20_pt_vp_loose", "", nbins_pt, bins_pt);
+  th1_tmdb_20_pt_vp[4]   = new TH1F("tmdb_20_pt_vp_hlt", "", nbins_pt, bins_pt);
 
+  // L1Muon with TMDB coincidence
+  // th1_tmdb_pt_coin      = new TH1*[5];
+  // th1_tmdb_pt_coin[0]   = new TH1F("tmdb_pt_vp_coin", "", nbins_pt, bins_pt);
+  // th1_tmdb_pt_coin[1]   = new TH1F("tmdb_pt_vp_coin_tight", "", nbins_pt, bins_pt);
+  // th1_tmdb_pt_coin[2]   = new TH1F("tmdb_pt_vp_coin_medium", "", nbins_pt, bins_pt);
+  // th1_tmdb_pt_coin[3]   = new TH1F("tmdb_pt_vp_coin_loose", "", nbins_pt, bins_pt);
+  // th1_tmdb_pt_coin[4]   = new TH1F("tmdb_pt_vp_coin_hlt", "", nbins_pt, bins_pt);
 
-  th1_mf_out      = new TH1*[512];
-  th1_mf_decision = new TH1*[512];
-  th1_mf_energy   = new TH1*[512];
+  th1_mf_out      = new TH1*[512]; // all mf outputs per channel
+  th1_mf_energy   = new TH1*[512]; // all energy mf outputs per channel
+  th1_mf_out_cell = new TH1*[128]; // all mf outputs per cell
+  th1_mf_out_mod  = new TH1*[128]; // all mf outputs per module
+  th1_mf_decision_cell  = new TH1*[128]; // only mf outputs with decision 1 per cell
+  th1_mf_decision_mod   = new TH1*[128]; // only mf outputs with decision 1 per module
   // loop for initialize th1_mf* histograms
   for(Int_t side=0; side<total_tile_sides; side++) { // side loop
   	for(Int_t module=0; module<total_tile_modules; module++) { // module loop
+      Int_t hnumber = side*total_tile_modules+module;
+      char buf1[20];char buf2[25]; char title[50];
+      sprintf(buf1, "mf_out_mod_%d", hnumber); sprintf(buf2, "mf_decision_mod_%d", hnumber);
+      sprintf(title, "D5+D6, Side: %d, Module: %d", side,module);
+      th1_mf_out_mod[side*total_tile_modules+module] = new TH1F(buf1, title, 100,10000,80000);
+      th1_mf_decision_mod[side*total_tile_modules+module] = new TH1F(buf2, title, 100,10000,80000);
+
+      sprintf(buf1, "mf_out_cell_%d", hnumber); sprintf(buf2, "mf_decision_cell_%d", hnumber);
+      sprintf(title, "D6, Side: %d, Module: %d", side,module); // cell-> 0:D5, 1:D6
+      th1_mf_out_cell[side*total_tile_modules+module] = new TH1F(buf1, title, 100,10000,80000);
+      th1_mf_decision_cell[side*total_tile_modules+module] = new TH1F(buf2, title, 100,10000,80000);
+
   		for(Int_t channel=0; channel<total_tmdb_mod_ch; channel++) { // channel loop
         Int_t hnumber = side*total_tile_modules*total_tmdb_mod_ch + module*total_tmdb_mod_ch + channel;
         char buf1[20];char buf2[25]; char buf3[25]; char title[50];
         sprintf(buf1, "mf_out_%d", hnumber); sprintf(buf2, "mf_decision_%d", hnumber);sprintf(buf3, "mf_energy_%d", hnumber);
         sprintf(title, "Side: %d, Module: %d, Channel: %d", side,module,channel);
         // cout << side*total_tile_modules*total_tmdb_mod_ch+module*total_tmdb_mod_ch+channel << endl;
-        th1_mf_out[side*total_tile_modules*total_tmdb_mod_ch+module*total_tmdb_mod_ch+channel]      = new TH1F(buf1, title, 100,0,60000);
-        th1_mf_decision[side*total_tile_modules*total_tmdb_mod_ch+module*total_tmdb_mod_ch+channel] = new TH1F(buf2, title, 100,0,60000);
-        th1_mf_energy[side*total_tile_modules*total_tmdb_mod_ch+module*total_tmdb_mod_ch+channel]   = new TH1F(buf3, title, 100,0,10000);
-      }
-    }
-  }
+        th1_mf_out[side*total_tile_modules*total_tmdb_mod_ch+module*total_tmdb_mod_ch+channel]      = new TH1F(buf1, title, 100,10000,80000);
+        th1_mf_energy[side*total_tile_modules*total_tmdb_mod_ch+module*total_tmdb_mod_ch+channel]   = new TH1F(buf3, title, 100,10000,80000);
+      } // end of channel loop
+
+    } // end of module loop
+  } // end of side loop
 
 	cout << "\tOk!" << endl;
 } // End of UserInitMF

@@ -42,6 +42,7 @@
 #define total_tile_modules		64 //64
 #define total_tile_sides 		2
 #define total_tmdb_mod_ch		4 //4
+#define total_tmdb_mod_cell 2
 #define total_tmdb_samples		7
 #define total_tmdb_coeff		7
 #define cov_matrix_size			7
@@ -349,24 +350,24 @@ public :
    vector<short>   *muctpi_dw_moreCandInSector;
    vector<short>   *muctpi_dw_charge;
    vector<short>   *muctpi_dw_candidateVetoed;
-  //  Int_t           TILE_cell_n;
-  //  vector<float>   *TILE_cell_E;
-  //  vector<float>   *TILE_cell_Et;
-  //  vector<float>   *TILE_cell_eta;
-  //  vector<float>   *TILE_cell_phi;
-  //  vector<float>   *TILE_cell_sinTh;
-  //  vector<float>   *TILE_cell_cosTh;
-  //  vector<float>   *TILE_cell_cotTh;
-  //  vector<float>   *TILE_cell_x;
-  //  vector<float>   *TILE_cell_y;
-  //  vector<float>   *TILE_cell_z;
-  //  vector<int>     *TILE_cell_badcell;
-  //  vector<int>     *TILE_cell_partition;
-  //  vector<int>     *TILE_cell_section;
-  //  vector<int>     *TILE_cell_side;
-  //  vector<int>     *TILE_cell_module;
-  //  vector<int>     *TILE_cell_tower;
-  //  vector<int>     *TILE_cell_sample;
+   Int_t           TILE_cell_n;
+   vector<float>   *TILE_cell_E;
+   vector<float>   *TILE_cell_ene1;
+   vector<float>   *TILE_cell_eta;
+   vector<float>   *TILE_cell_phi;
+   vector<float>   *TILE_cell_sinTh;
+   vector<float>   *TILE_cell_cosTh;
+   vector<float>   *TILE_cell_cotTh;
+   vector<float>   *TILE_cell_x;
+   vector<float>   *TILE_cell_y;
+   vector<float>   *TILE_cell_z;
+   vector<int>     *TILE_cell_badcell;
+   vector<int>     *TILE_cell_partition;
+   vector<int>     *TILE_cell_section;
+   vector<int>     *TILE_cell_side;
+   vector<int>     *TILE_cell_module;
+   vector<int>     *TILE_cell_tower;
+   vector<int>     *TILE_cell_sample;
 
    // List of branches for L1TGCNtuple
    TBranch        *b_runNumber;   //!
@@ -654,24 +655,24 @@ public :
    TBranch        *b_muctpi_dw_moreCandInSector;   //!
    TBranch        *b_muctpi_dw_charge;   //!
    TBranch        *b_muctpi_dw_candidateVetoed;   //!
-  //  TBranch        *b_TILE_cell_n;   //!
-  //  TBranch        *b_TILE_cell_E;   //!
-  //  TBranch        *b_TILE_cell_Et;   //!
-  //  TBranch        *b_TILE_cell_eta;   //!
-  //  TBranch        *b_TILE_cell_phi;   //!
-  //  TBranch        *b_TILE_cell_sinTh;   //!
-  //  TBranch        *b_TILE_cell_cosTh;   //!
-  //  TBranch        *b_TILE_cell_cotTh;   //!
-  //  TBranch        *b_TILE_cell_x;   //!
-  //  TBranch        *b_TILE_cell_y;   //!
-  //  TBranch        *b_TILE_cell_z;   //!
-  //  TBranch        *b_TILE_cell_badcell;   //!
-  //  TBranch        *b_TILE_cell_partition;   //!
-  //  TBranch        *b_TILE_cell_section;   //!
-  //  TBranch        *b_TILE_cell_side;   //!
-  //  TBranch        *b_TILE_cell_module;   //!
-  //  TBranch        *b_TILE_cell_tower;   //!
-  //  TBranch        *b_TILE_cell_sample;   //!
+   TBranch        *b_TILE_cell_n;   //!
+   TBranch        *b_TILE_cell_E;   //!
+   TBranch        *b_TILE_cell_ene1;   //!
+   TBranch        *b_TILE_cell_eta;   //!
+   TBranch        *b_TILE_cell_phi;   //!
+   TBranch        *b_TILE_cell_sinTh;   //!
+   TBranch        *b_TILE_cell_cosTh;   //!
+   TBranch        *b_TILE_cell_cotTh;   //!
+   TBranch        *b_TILE_cell_x;   //!
+   TBranch        *b_TILE_cell_y;   //!
+   TBranch        *b_TILE_cell_z;   //!
+   TBranch        *b_TILE_cell_badcell;   //!
+   TBranch        *b_TILE_cell_partition;   //!
+   TBranch        *b_TILE_cell_section;   //!
+   TBranch        *b_TILE_cell_side;   //!
+   TBranch        *b_TILE_cell_module;   //!
+   TBranch        *b_TILE_cell_tower;   //!
+   TBranch        *b_TILE_cell_sample;   //!
 
    TMDB(TTree *tree1=0);
    virtual ~TMDB();
@@ -702,11 +703,13 @@ public :
 //   virtual Int_t modulenumber_in_glink(Int_t sector);
 
 	virtual void 		UserInit();
+  // virtual void		loop_mc(bool ignoreAside); // monte carlo
 	virtual void		loop_offline(bool ignoreAside);
   virtual void		loop_hlt(bool ignoreAside);
   virtual void		loop_l1_trigger(bool ignoreAside);
   virtual void		loop_tmdb(bool ignoreAside);
   virtual void		loop_extra(bool ignoreAside);
+  virtual void		loop_save_muons(string fout); // loop for save pulse muons in text files
 	virtual Int_t		tile_phi_module(Float_t phi);
 	virtual Float_t 	calc_dR(Float_t dEta, Float_t dPhi);
 
@@ -716,6 +719,8 @@ public :
 
   // Variables
 	Int_t 					npulses[2][total_tile_modules][total_tmdb_mod_ch];
+
+  TH1**           th1_mc;
 
   TH1**           th1_offline;
   TH1**           th1_offline_eta;
@@ -813,8 +818,13 @@ public :
   TH1**           th1_tmdb_20_pt_fp;
   TH1**           th1_tmdb_20_pt_fn;
 
+  TH1**           th1_tmdb_pt_coin;
+
   TH1**           th1_mf_out;
-  TH1**           th1_mf_decision;
+  TH1**           th1_mf_out_cell;
+  TH1**           th1_mf_out_mod;
+  TH1**           th1_mf_decision_cell;
+  TH1**           th1_mf_decision_mod;
   TH1**           th1_mf_energy;
 
 };
@@ -1120,23 +1130,23 @@ void TMDB::Init(TTree *tree1)
    muctpi_dw_moreCandInSector = 0;
    muctpi_dw_charge = 0;
    muctpi_dw_candidateVetoed = 0;
-  //  TILE_cell_E = 0;
-  //  TILE_cell_Et = 0;
-  //  TILE_cell_eta = 0;
-  //  TILE_cell_phi = 0;
-  //  TILE_cell_sinTh = 0;
-  //  TILE_cell_cosTh = 0;
-  //  TILE_cell_cotTh = 0;
-  //  TILE_cell_x = 0;
-  //  TILE_cell_y = 0;
-  //  TILE_cell_z = 0;
-  //  TILE_cell_badcell = 0;
-  //  TILE_cell_partition = 0;
-  //  TILE_cell_section = 0;
-  //  TILE_cell_side = 0;
-  //  TILE_cell_module = 0;
-  //  TILE_cell_tower = 0;
-  //  TILE_cell_sample = 0;
+   TILE_cell_E = 0;
+   TILE_cell_ene1 = 0;
+   TILE_cell_eta = 0;
+   TILE_cell_phi = 0;
+   TILE_cell_sinTh = 0;
+   TILE_cell_cosTh = 0;
+   TILE_cell_cotTh = 0;
+   TILE_cell_x = 0;
+   TILE_cell_y = 0;
+   TILE_cell_z = 0;
+   TILE_cell_badcell = 0;
+   TILE_cell_partition = 0;
+   TILE_cell_section = 0;
+   TILE_cell_side = 0;
+   TILE_cell_module = 0;
+   TILE_cell_tower = 0;
+   TILE_cell_sample = 0;
    // Set branch addresses and branch pointers for L1TGCNtuple
    if (!tree1) return;
    fChainPhysics = tree1;
@@ -1428,24 +1438,24 @@ void TMDB::Init(TTree *tree1)
    fChainPhysics->SetBranchAddress("muctpi_dw_moreCandInSector", &muctpi_dw_moreCandInSector, &b_muctpi_dw_moreCandInSector);
    fChainPhysics->SetBranchAddress("muctpi_dw_charge", &muctpi_dw_charge, &b_muctpi_dw_charge);
    fChainPhysics->SetBranchAddress("muctpi_dw_candidateVetoed", &muctpi_dw_candidateVetoed, &b_muctpi_dw_candidateVetoed);
-  //  fChainPhysics->SetBranchAddress("TILE_cell_n", &TILE_cell_n, &b_TILE_cell_n);
-  //  fChainPhysics->SetBranchAddress("TILE_cell_E", &TILE_cell_E, &b_TILE_cell_E);
-  //  fChainPhysics->SetBranchAddress("TILE_cell_Et", &TILE_cell_Et, &b_TILE_cell_Et);
-  //  fChainPhysics->SetBranchAddress("TILE_cell_eta", &TILE_cell_eta, &b_TILE_cell_eta);
-  //  fChainPhysics->SetBranchAddress("TILE_cell_phi", &TILE_cell_phi, &b_TILE_cell_phi);
-  //  fChainPhysics->SetBranchAddress("TILE_cell_sinTh", &TILE_cell_sinTh, &b_TILE_cell_sinTh);
-  //  fChainPhysics->SetBranchAddress("TILE_cell_cosTh", &TILE_cell_cosTh, &b_TILE_cell_cosTh);
-  //  fChainPhysics->SetBranchAddress("TILE_cell_cotTh", &TILE_cell_cotTh, &b_TILE_cell_cotTh);
-  //  fChainPhysics->SetBranchAddress("TILE_cell_x", &TILE_cell_x, &b_TILE_cell_x);
-  //  fChainPhysics->SetBranchAddress("TILE_cell_y", &TILE_cell_y, &b_TILE_cell_y);
-  //  fChainPhysics->SetBranchAddress("TILE_cell_z", &TILE_cell_z, &b_TILE_cell_z);
-  //  fChainPhysics->SetBranchAddress("TILE_cell_badcell", &TILE_cell_badcell, &b_TILE_cell_badcell);
-  //  fChainPhysics->SetBranchAddress("TILE_cell_partition", &TILE_cell_partition, &b_TILE_cell_partition);
-  //  fChainPhysics->SetBranchAddress("TILE_cell_section", &TILE_cell_section, &b_TILE_cell_section);
-  //  fChainPhysics->SetBranchAddress("TILE_cell_side", &TILE_cell_side, &b_TILE_cell_side);
-  //  fChainPhysics->SetBranchAddress("TILE_cell_module", &TILE_cell_module, &b_TILE_cell_module);
-  //  fChainPhysics->SetBranchAddress("TILE_cell_tower", &TILE_cell_tower, &b_TILE_cell_tower);
-  //  fChainPhysics->SetBranchAddress("TILE_cell_sample", &TILE_cell_sample, &b_TILE_cell_sample);
+   fChainPhysics->SetBranchAddress("TILE_cell_n", &TILE_cell_n, &b_TILE_cell_n);
+   fChainPhysics->SetBranchAddress("TILE_cell_E", &TILE_cell_E, &b_TILE_cell_E);
+   fChainPhysics->SetBranchAddress("TILE_cell_ene1", &TILE_cell_ene1, &b_TILE_cell_ene1);
+   fChainPhysics->SetBranchAddress("TILE_cell_eta", &TILE_cell_eta, &b_TILE_cell_eta);
+   fChainPhysics->SetBranchAddress("TILE_cell_phi", &TILE_cell_phi, &b_TILE_cell_phi);
+   fChainPhysics->SetBranchAddress("TILE_cell_sinTh", &TILE_cell_sinTh, &b_TILE_cell_sinTh);
+   fChainPhysics->SetBranchAddress("TILE_cell_cosTh", &TILE_cell_cosTh, &b_TILE_cell_cosTh);
+   fChainPhysics->SetBranchAddress("TILE_cell_cotTh", &TILE_cell_cotTh, &b_TILE_cell_cotTh);
+   fChainPhysics->SetBranchAddress("TILE_cell_x", &TILE_cell_x, &b_TILE_cell_x);
+   fChainPhysics->SetBranchAddress("TILE_cell_y", &TILE_cell_y, &b_TILE_cell_y);
+   fChainPhysics->SetBranchAddress("TILE_cell_z", &TILE_cell_z, &b_TILE_cell_z);
+   fChainPhysics->SetBranchAddress("TILE_cell_badcell", &TILE_cell_badcell, &b_TILE_cell_badcell);
+   fChainPhysics->SetBranchAddress("TILE_cell_partition", &TILE_cell_partition, &b_TILE_cell_partition);
+   fChainPhysics->SetBranchAddress("TILE_cell_section", &TILE_cell_section, &b_TILE_cell_section);
+   fChainPhysics->SetBranchAddress("TILE_cell_side", &TILE_cell_side, &b_TILE_cell_side);
+   fChainPhysics->SetBranchAddress("TILE_cell_module", &TILE_cell_module, &b_TILE_cell_module);
+   fChainPhysics->SetBranchAddress("TILE_cell_tower", &TILE_cell_tower, &b_TILE_cell_tower);
+   fChainPhysics->SetBranchAddress("TILE_cell_sample", &TILE_cell_sample, &b_TILE_cell_sample);
 
    Notify();
 }
